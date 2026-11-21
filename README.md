@@ -2,7 +2,6 @@
 
 A multi-node Big Data lab running entirely in Docker on a single Ubuntu 22.04 VM: **HDFS** for distributed storage, **Spark** for distributed compute, and **Hive** for SQL on top of HDFS.
 
-Built as a hands-on lab for the *Advanced Big Data Ecosystem* module (RSI3, ISET Nabeul).
 
 > **Scope:** the "nodes" are containers on one machine. They simulate a multi-node architecture but are not a cluster spread over several physical hosts, and there is no high availability.
 
