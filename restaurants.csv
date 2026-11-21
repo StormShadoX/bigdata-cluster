@@ -1,0 +1,9 @@
+id,restaurant,ville,type,prix
+1,Restaurant A,Nabeul,Tunisien,25
+2,Restaurant B,Tunis,Italien,40
+3,Restaurant C,Hammamet,Tunisien,30
+4,Restaurant D,Sousse,FastFood,18
+5,Restaurant E,Nabeul,Italien,35
+6,Restaurant F,Tunis,Tunisien,28
+7,Restaurant G,Hammamet,FastFood,22
+8,Restaurant H,Sousse,Italien,32

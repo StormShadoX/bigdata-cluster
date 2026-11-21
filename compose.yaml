@@ -1,0 +1,144 @@
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    hostname: namenode
+    restart: unless-stopped
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      CLUSTER_NAME: iset-cluster
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      HDFS_CONF_dfs_replication: "3"
+    volumes:
+      - ./hadoop/data/namenode:/hadoop/dfs/name
+    networks: [bigdata-net]
+
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    hostname: datanode1
+    restart: unless-stopped
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      SERVICE_PRECONDITION: namenode:9870
+    volumes:
+      - ./hadoop/data/datanode1:/hadoop/dfs/data
+    depends_on: [namenode]
+    networks: [bigdata-net]
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    hostname: datanode2
+    restart: unless-stopped
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      SERVICE_PRECONDITION: namenode:9870
+    volumes:
+      - ./hadoop/data/datanode2:/hadoop/dfs/data
+    depends_on: [namenode]
+    networks: [bigdata-net]
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode3
+    hostname: datanode3
+    restart: unless-stopped
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      SERVICE_PRECONDITION: namenode:9870
+    volumes:
+      - ./hadoop/data/datanode3:/hadoop/dfs/data
+    depends_on: [namenode]
+    networks: [bigdata-net]
+
+  datanode4:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode4
+    hostname: datanode4
+    restart: unless-stopped
+    environment:
+      CORE_CONF_fs_defaultFS: hdfs://namenode:9000
+      SERVICE_PRECONDITION: namenode:9870
+    volumes:
+      - ./hadoop/data/datanode4:/hadoop/dfs/data
+    depends_on: [namenode]
+    networks: [bigdata-net]
+
+  spark-master:
+    image: apache/spark:3.5.6
+    container_name: spark-master
+    hostname: spark-master
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master", "--host", "spark-master"]
+    ports: ["8080:8080", "7077:7077"]
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+      HADOOP_CONF_DIR: /opt/hadoop-conf
+    volumes:
+      - ./hadoop/config:/opt/hadoop-conf:ro
+    networks: [bigdata-net]
+
+  spark-worker1:
+    image: apache/spark:3.5.6
+    container_name: spark-worker1
+    hostname: spark-worker1
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+    depends_on: [spark-master]
+    environment:
+      SPARK_NO_DAEMONIZE: "true"
+      HADOOP_CONF_DIR: /opt/hadoop-conf
+    volumes:
+      - ./hadoop/config:/opt/hadoop-conf:ro
+    networks: [bigdata-net]
+
+  hive-postgres:
+    image: postgres:13
+    container_name: hive-postgres
+    hostname: hive-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: metastore_db
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hivepass
+    volumes:
+      - ./hive/pgdata:/var/lib/postgresql/data
+    networks: [bigdata-net]
+
+  hive-metastore:
+    image: apache/hive:3.1.3
+    container_name: hive-metastore
+    hostname: hive-metastore
+    restart: unless-stopped
+    depends_on: [hive-postgres, namenode]
+    environment:
+      SERVICE_NAME: metastore
+      IS_RESUME: "true"
+      DB_DRIVER: postgres
+    volumes:
+      - ./hive/hive-site-metastore.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./hadoop/config/core-site.xml:/opt/hive/conf/core-site.xml:ro
+      - ./hive/postgresql.jar:/opt/hive/lib/postgresql.jar:ro
+    networks: [bigdata-net]
+
+  hive-server:
+    image: apache/hive:3.1.3
+    container_name: hive-server
+    hostname: hive-server
+    restart: unless-stopped
+    depends_on: [hive-metastore]
+    ports: ["10000:10000", "10002:10002"]
+    environment:
+      SERVICE_NAME: hiveserver2
+      IS_RESUME: "true"
+    volumes:
+      - ./hive/hive-site-server.xml:/opt/hive/conf/hive-site.xml:ro
+      - ./hive/notez:/opt/tez:ro
+      - ./hadoop/config/core-site.xml:/opt/hive/conf/core-site.xml:ro
+    networks: [bigdata-net]
+
+networks:
+  bigdata-net:
+    name: bigdata-net
+    driver: bridge

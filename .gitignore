@@ -1,0 +1,6 @@
+hadoop/data/
+hive/pgdata/
+hive/postgresql.jar
+hive/notez/
+*.bak*
+*.log
